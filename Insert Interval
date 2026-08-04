@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+
+int** insert(int** intervals, int intervalsSize, int* intervalsColSize, int* newInterval, int newIntervalSize, int* returnSize, int** returnColumnSizes) {
+    int** result = (int**)malloc(sizeof(int*) * (intervalsSize + 1));
+    int* col_sizes = (int*)malloc(sizeof(int) * (intervalsSize + 1));
+    int count = 0;
+    int i = 0;
+
+    while (i < intervalsSize && intervals[i][1] < newInterval[0]) {
+        result[count] = (int*)malloc(sizeof(int) * 2);
+        result[count][0] = intervals[i][0];
+        result[count][1] = intervals[i][1];
+        col_sizes[count] = 2;
+        count++;
+        i++;
+    }
+
+    while (i < intervalsSize && intervals[i][0] <= newInterval[1]) {
+        newInterval[0] = MIN(newInterval[0], intervals[i][0]);
+        newInterval[1] = MAX(newInterval[1], intervals[i][1]);
+        i++;
+    }
+
+    result[count] = (int*)malloc(sizeof(int) * 2);
+    result[count][0] = newInterval[0];
+    result[count][1] = newInterval[1];
+    col_sizes[count] = 2;
+    count++;
+
+    while (i < intervalsSize) {
+        result[count] = (int*)malloc(sizeof(int) * 2);
+        result[count][0] = intervals[i][0];
+        result[count][1] = intervals[i][1];
+        col_sizes[count] = 2;
+        count++;
+        i++;
+    }
+
+    *returnSize = count;
+    *returnColumnSizes = col_sizes;
+    return result;
+}
