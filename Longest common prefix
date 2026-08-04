@@ -1,0 +1,30 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* longestCommonPrefix(char** strs, int strsSize) {
+    if (strsSize == 0 || strs == NULL) {
+        char* empty = (char*)malloc(sizeof(char));
+        empty[0] = '\0';
+        return empty;
+    }
+
+    int len = 0;
+    while (strs[0][len] != '\0') {
+        char current_char = strs[0][len];
+        for (int i = 1; i < strsSize; i++) {
+            if (strs[i][len] == '\0' || strs[i][len] != current_char) {
+                char* result = (char*)malloc((len + 1) * sizeof(char));
+                strncpy(result, strs[0], len);
+                result[len] = '\0';
+                return result;
+            }
+        }
+        len++;
+    }
+
+    char* result = (char*)malloc((len + 1) * sizeof(char));
+    strncpy(result, strs[0], len);
+    result[len] = '\0';
+    return result;
+}
