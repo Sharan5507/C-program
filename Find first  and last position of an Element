@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Helper function to find either the first or last index of target
+int findBound(int* nums, int numsSize, int target, int findFirst) {
+    int left = 0;
+    int right = numsSize - 1;
+    int bound = -1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+
+        if (nums[mid] == target) {
+            bound = mid; // Record candidate index
+            if (findFirst) {
+                right = mid - 1; // Keep searching left for earlier occurrences
+            } else {
+                left = mid + 1;  // Keep searching right for later occurrences
+            }
+        } else if (nums[mid] < target) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    return bound;
+}
+
+int* searchRange(int* nums, int numsSize, int target, int* returnSize) {
+    // LeetCode C platform requires setting the return size explicitly
+    *returnSize = 2;
+    int* result = (int*)malloc(2 * sizeof(int));
+    
+    // Default response if not found
+    result[0] = -1;
+    result[1] = -1;
+
+    if (nums == NULL || numsSize == 0) {
+        return result;
+    }
+
+    // Run independent binary searches for both edges
+    result[0] = findBound(nums, numsSize, target, 1); // 1 to find first index
+    if (result[0] != -1) {
+        result[1] = findBound(nums, numsSize, target, 0); // 0 to find last index
+    }
+
+    return result;
+}
