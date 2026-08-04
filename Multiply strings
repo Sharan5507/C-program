@@ -1,0 +1,45 @@
+#include <stdlib.h>
+#include <string.h>
+
+char* multiply(char* num1, char* num2) {
+    if (strcmp(num1, "0") == 0 || strcmp(num2, "0") == 0) {
+        char* result = (char*)malloc(2 * sizeof(char));
+        result[0] = '0';
+        result[1] = '\0';
+        return result;
+    }
+
+    int len1 = strlen(num1);
+    int len2 = strlen(num2);
+    int total_len = len1 + len2;
+    
+    int* pos = (int*)calloc(total_len, sizeof(int));
+
+    for (int i = len1 - 1; i >= 0; i--) {
+        for (int j = len2 - 1; j >= 0; j--) {
+            int mul = (num1[i] - '0') * (num2[j] - '0');
+            int p1 = i + j;
+            int p2 = i + j + 1;
+            int sum = mul + pos[p2];
+
+            pos[p1] += sum / 10;
+            pos[p2] = sum % 10;
+        }
+    }
+
+    char* result = (char*)malloc((total_len + 1) * sizeof(char));
+    int res_idx = 0;
+    int start = 0;
+
+    while (start < total_len && pos[start] == 0) {
+        start++;
+    }
+
+    for (int i = start; i < total_len; i++) {
+        result[res_idx++] = pos[i] + '0';
+    }
+    result[res_idx] = '\0';
+
+    free(pos);
+    return result;
+}
