@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int** results;
+    int* column_sizes;
+    int size;
+    int capacity;
+} ResultContainer;
+
+int compare(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+void backtrack(int* candidates, int candidatesSize, int target, int index, 
+               int* current_combination, int current_size, ResultContainer* res) {
+    if (target == 0) {
+        if (res->size >= res->capacity) {
+            res->capacity *= 2;
+            res->results = (int**)realloc(res->results, sizeof(int*) * res->capacity);
+            res->column_sizes = (int*)realloc(res->column_sizes, sizeof(int) * res->capacity);
+        }
+        res->results[res->size] = (int*)malloc(sizeof(int) * current_size);
+        memcpy(res->results[res->size], current_combination, sizeof(int) * current_size);
+        res->column_sizes[res->size] = current_size;
+        res->size++;
+        return;
+    }
+
+    for (int i = index; i < candidatesSize; i++) {
+        if (candidates[i] > target) {
+            break;
+        }
+        if (i > index && candidates[i] == candidates[i - 1]) {
+            continue;
+        }
+        
+        current_combination[current_size] = candidates[i];
+        backtrack(candidates, candidatesSize, target - candidates[i], i + 1, 
+                  current_combination, current_size + 1, res);
+    }
+}
+
+int** combinationSum2(int* candidates, int candidatesSize, int target, 
+                      int* returnSize, int** returnColumnSizes) {
+    qsort(candidates, candidatesSize, sizeof(int), compare);
+
+    ResultContainer res;
+    res.capacity = 150;
+    res.size = 0;
+    res.results = (int**)malloc(sizeof(int*) * res.capacity);
+    res.column_sizes = (int*)malloc(sizeof(int) * res.capacity);
+
+    int* current_combination = (int*)malloc(sizeof(int) * candidatesSize);
+
+    backtrack(candidates, candidatesSize, target, 0, current_combination, 0, &res);
+
+    free(current_combination);
+
+    *returnSize = res.size;
+    *returnColumnSizes = res.column_sizes;
+
+    return res.results;
+}
