@@ -1,0 +1,139 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define HASH_SIZE 5003
+
+// Structure for Hash Map Nodes
+typedef struct Node {
+    char* word;
+    int count;
+    struct Node* next;
+} Node;
+
+// Simple DJB2 Hash function for strings
+unsigned int hash(const char* str) {
+    unsigned int h = 5381;
+    while (*str) {
+        h = ((h << 5) + h) + *str++;
+    }
+    return h % HASH_SIZE;
+}
+
+// Insert or increment word count in Hash Map
+void insert(Node** table, const char* word, int val) {
+    unsigned int h = hash(word);
+    Node* curr = table[h];
+    while (curr != NULL) {
+        if (strcmp(curr->word, word) == 0) {
+            curr->count += val;
+            return;
+        }
+        curr = curr->next;
+    }
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->word = strdup(word);
+    newNode->count = val;
+    newNode->next = table[h];
+    table[h] = newNode;
+}
+
+// Search for a word's count in Hash Map
+int getCount(Node** table, const char* word) {
+    unsigned int h = hash(word);
+    Node* curr = table[h];
+    while (curr != NULL) {
+        if (strcmp(curr->word, word) == 0) {
+            return curr->count;
+        }
+        curr = curr->next;
+    }
+    return 0;
+}
+
+// Clear dynamically allocated memory in Hash Map
+void clearTable(Node** table) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        Node* curr = table[i];
+        while (curr != NULL) {
+            Node* temp = curr;
+            curr = curr->next;
+            free(temp->word);
+            free(temp);
+        }
+        table[i] = NULL;
+    }
+}
+
+int* findSubstring(char* s, char** words, int wordsSize, int* returnSize) {
+    *returnSize = 0;
+    if (!s || !words || wordsSize == 0) return NULL;
+
+    int sLen = strlen(s);
+    int wordLen = strlen(words[0]);
+    int totalLen = wordLen * wordsSize;
+    if (sLen < totalLen) return NULL;
+
+    // Allocate max potential result array memory
+    int* result = (int*)malloc(sLen * sizeof(int));
+    
+    // Create and populate the target word frequency hash map
+    Node** targetCounts = (Node**)calloc(HASH_SIZE, sizeof(Node*));
+    for (int i = 0; i < wordsSize; i++) {
+        insert(targetCounts, words[i], 1);
+    }
+
+    // Temporary window word to slide over s
+    char* tempWord = (char*)malloc((wordLen + 1) * sizeof(char));
+    Node** currentCounts = (Node**)calloc(HASH_SIZE, sizeof(Node*));
+
+    // Sliding window for each alignment offset
+    for (int i = 0; i < wordLen; i++) {
+        int left = i, right = i, wordsUsed = 0;
+        clearTable(currentCounts);
+
+        while (right + wordLen <= sLen) {
+            // Extract the word at the right boundary
+            strncpy(tempWord, s + right, wordLen);
+            tempWord[wordLen] = '\0';
+            right += wordLen;
+
+            int targetNum = getCount(targetCounts, tempWord);
+            if (targetNum > 0) {
+                insert(currentCounts, tempWord, 1);
+                wordsUsed++;
+
+                // If word frequency exceeds requirements, shrink window from the left
+                while (getCount(currentCounts, tempWord) > targetNum) {
+                    char* leftWord = (char*)malloc((wordLen + 1) * sizeof(char));
+                    strncpy(leftWord, s + left, wordLen);
+                    leftWord[wordLen] = '\0';
+
+                    insert(currentCounts, leftWord, -1);
+                    wordsUsed--;
+                    left += wordLen;
+                    free(leftWord);
+                }
+
+                // Match found
+                if (wordsUsed == wordsSize) {
+                    result[(*returnSize)++] = left;
+                }
+            } else {
+                // Invalid word encountered: reset window completely
+                clearTable(currentCounts);
+                wordsUsed = 0;
+                left = right;
+            }
+        }
+    }
+
+    // Cleanup allocations
+    free(tempWord);
+    clearTable(targetCounts);
+    clearTable(currentCounts);
+    free(targetCounts);
+    free(currentCounts);
+
+    return result;
+}
