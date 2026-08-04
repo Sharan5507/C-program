@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* countAndSay(int n) {
+    if (n <= 0) return NULL;
+
+    // Base case string initialization
+    char* current = (char*)malloc(2 * sizeof(char));
+    strcpy(current, "1");
+
+    for (int i = 2; i <= n; i++) {
+        // Allocate a generous buffer for the next compressed sequence string
+        // The length can at most roughly double across early iterations
+        int current_len = strlen(current);
+        char* next_str = (char*)malloc((current_len * 2 + 1) * sizeof(char));
+        int next_idx = 0;
+
+        int j = 0;
+        while (j < current_len) {
+            char digit = current[j];
+            int count = 0;
+
+            // Count consecutive identical characters
+            while (j < current_len && current[j] == digit) {
+                count++;
+                j++;
+            }
+
+            // Append count and character to the next string sequence buffer
+            // Since count won't exceed single-digit limits for n <= 30, use simple offsets
+            next_str[next_idx++] = count + '0';
+            next_str[next_idx++] = digit;
+        }
+        next_str[next_idx] = '\0'; // Null-terminate string
+
+        // Free previous iteration memory and update pointers
+        free(current);
+        current = next_str;
+    }
+
+    return current;
+}
